@@ -1,0 +1,74 @@
+%% ================================
+%   SPEECH DATASET RECORDING SCRIPT
+%   Creates folders and records audio for each class label
+%   Each audio = 1 second, 16 kHz mono
+% =================================
+
+clear; clc;
+
+%% --- 1. Define Classes ---
+classes = { ...
+    'zero','one','two','three','four','five','six','seven','eight','nine', ...
+    'plus','minus','times','divide','equals','power', ...
+    'open','close'};
+
+numSamplesPerClass = 21;   % How many recordings per class
+sampleRate = 16000;        % Standard speech rate
+duration = 1;              % seconds
+
+%% --- 2. Create Dataset Folders ---
+datasetFolder = 'dataset';
+
+if ~exist(datasetFolder, 'dir')
+    mkdir(datasetFolder);
+end
+
+for i = 1:length(classes)
+    classFolder = fullfile(datasetFolder, classes{i});
+    if ~exist(classFolder, 'dir')
+        mkdir(classFolder);
+    end
+end
+
+%% --- 3. Start Recording ---
+disp("======================================");
+disp("   Speech Dataset Recording Started    ");
+disp("======================================");
+disp("You will be prompted to speak each word.");
+disp("Press ENTER to begin...");
+pause;
+
+recObj = audiorecorder(sampleRate, 16, 1); % mono voice recorder
+
+for c = 1:length(classes)
+    
+    className = classes{c};
+    disp(" ");
+    disp("======================================");
+    fprintf("Class: %s\n", className);
+    disp("======================================");
+    
+    for n = 1:numSamplesPerClass
+        
+        fprintf("Sample %d/%d - Say: '%s' ... Press ENTER to start recording\n", ...
+            n, numSamplesPerClass, className);
+        pause; % wait for user to press enter
+        
+        disp("Recording...");
+        recordblocking(recObj, duration);
+        disp("Done!");
+        
+        audioData = getaudiodata(recObj);
+        
+        % Save file
+        filename = fullfile(datasetFolder, className, sprintf("%03d.wav", n));
+        audiowrite(filename, audioData, sampleRate);
+        
+        disp("Saved --> " + filename);
+    end
+end
+
+disp(" ");
+disp("======================================");
+disp("   Recording Complete! All files saved.");
+disp("======================================");
