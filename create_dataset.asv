@@ -1,0 +1,67 @@
+function record_my_dataset()
+% record_my_dataset: Records a specified number of audio samples from the live microphone input.
+% Each recording is triggered after the user presses ENTER and is saved into a labeled subfolder.
+
+    % --- 1. Fixed Recording Parameters ---
+    Fs = 16000; % Sample Rate (Consistent with Training/Live Test)
+    recordDuration = 1.0; % Recording Duration (Seconds)
+    
+    audioDir = 'my_digit_dataset/'; % Root directory for recordings
+    
+    % Prepare the Audio Recorder
+    recObj = audiorecorder(Fs, 16, 1); % 16-bit, mono channel
+    
+    disp('==================================================');
+    disp('           Personal Dataset Recording Tool');
+    disp('==================================================');
+
+    % --- 2. Get User Inputs ---
+    
+    % Get the label to record (e.g., 5, six, one, etc.)
+    className = input('Enter the Label to record (e.g., 6 or seven): ', 's');
+    
+    % Get the number of recordings to make (e.g., 130)
+    numRecords = input(['How many recordings for the label "', className, '"? (e.g., 130): ']);
+    
+    if ~isscalar(numRecords) || numRecords <= 0 || mod(numRecords, 1) ~= 0
+        error('Error: The number of recordings must be a positive integer.');
+    end
+
+    % --- 3. Create Folder Structure ---
+    currentOutputPath = fullfile(audioDir, className);
+    if ~exist(currentOutputPath, 'dir')
+        mkdir(currentOutputPath);
+        fprintf('-> New folder created: %s\n', currentOutputPath);
+    else
+        fprintf('-> Folder already exists: %s. Files will be appended to existing ones.\n', currentOutputPath);
+    end
+
+    % --- 4. Recording Loop ---
+    fprintf('\n!!! ATTENTION: Speak clearly immediately after the " READY" prompt. !!!\n');
+    fprintf('Target: %d recordings. Each recording will last %g seconds.\n', numRecords, recordDuration);
+    
+    for i = 1:numRecords
+        
+        % Wait for the user to press ENTER
+        fprintf('\n--- Recording %d / %d ---', i, numRecords);
+        input('Press ENTER and prepare to speak...', 's');
+
+        disp('READY. SPEAK QUICKLY: ');
+        recordblocking(recObj, recordDuration); % Start and wait for recording
+        disp(' Recording Finished.');
+        
+        y = getaudiodata(recObj); % Get the audio data
+        
+        % Create the file name (e.g., 6_001.wav, 6_002.wav)
+        fileName = [className, '_', num2str(i, '%03d'), '.wav'];
+        fullAudioPath = fullfile(currentOutputPath, fileName);
+        
+        % Save the audio file
+        audiowrite(fullAudioPath, y, Fs);
+        fprintf('   -> Saved: %s\n', fileName);
+    end
+    
+    disp('==================================================');
+    fprintf(' %d recordings for label "%s" completed successfully.', numRecords, className);
+    disp('==================================================');
+end
