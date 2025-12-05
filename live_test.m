@@ -1,7 +1,7 @@
 % live_digit_recognition.m
 % Digit recognition using the trained CNN model and microphone input
 % --- 1. Load Model and Parameters ---
-modelName = 'digit_09_model_v3.mat';
+modelName = 'digit_09_model_v4_vcka.mat';
 
 if ~exist(modelName, 'file')
     error(['Trained model file not found: ', modelName, '. Please run trainCNNModel.m first.']);
@@ -20,7 +20,7 @@ winSize = round(0.025 * Fs);
 hopSize = round(0.010 * Fs); 
 nfft = 512;
 
-% --- YENİ EKLENEN KAYDETME DEĞİŞKENLERİ ---
+
 audioDir_LiveTest = 'live_recordings/';
 spectrogramDir_LiveTest = 'live_spectrograms/';
 if ~exist(audioDir_LiveTest, 'dir'), mkdir(audioDir_LiveTest); end

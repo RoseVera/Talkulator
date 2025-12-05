@@ -1,6 +1,6 @@
 %% 1. Load and Prepare the Data Set ---
 
-spectrogramDir = 'vera_canan_kaggle_spec/';
+spectrogramDir = 'vera_canan_kaggle_astjan_spec/';
 imageSize = [64, 64, 1]; 
 
 % Load images using ImageDatastore.
@@ -80,15 +80,15 @@ options = trainingOptions('adam', ...
     'Shuffle', 'every-epoch', ...
     'Plots', 'training-progress', ...
     'Verbose', false, ...
-    'ValidationPatience', 30); % Aşırı öğrenmeyi önlemek için Early Stopping eklendi
+    'ValidationPatience', 40); % Aşırı öğrenmeyi önlemek için Early Stopping eklendi
 
 fprintf('Model is training (Epochs: 100, Batch Size:32, ValidationPatience: 30)...\n');
 net = trainNetwork(augimdsTrain, layers, options);
 fprintf('Training completed.\n');
 
 %% 4. Evaluate the Model 
-save('digit_09_model_v3.mat', 'net', 'imageSize'); 
-fprintf('Model saved as "digit_09_model.mat" .\n');
+save('digit_09_model_v4_vcka.mat', 'net', 'imageSize'); 
+fprintf('Model saved as "digit_09_model_v4_vcka.mat" .\n');
 
 % Calculate accuracy on the test data
 YPred = classify(net, imdsTest);
