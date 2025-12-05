@@ -22,11 +22,11 @@ function symbol = mapPredictionToSymbol(predictedLabel)
             symbol = '5';
         case {'6'}
             symbol = '6';
-        case {'7'}
+        case {'seven', '7'}
             symbol = '7';
-        case {'8'}
+        case {'eight', '8'}
             symbol = '8';
-        case {'9'}
+        case {'nine', '9'}
             
         % Operators
         case {'plus'}
