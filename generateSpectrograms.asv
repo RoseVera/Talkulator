@@ -1,10 +1,5 @@
 function generateSpectrograms(audioDir, spectrogramDir, spectrogramDimensions)
 % generateSpectrograms: Converts audio files into Mel-spectrogram images
-% and preserves the directory structure.
-%
-% spectrogramDir: The main directory where spectrograms will be saved (e.g., 'spectrograms/').
-% spectrogramDimensions: The dimensions of the spectrogram image [Height, Width]. Defaults to [64, 64].
-
     if nargin < 3
         spectrogramDimensions = [64, 64]; % [Height, Width]
     end
@@ -24,7 +19,7 @@ function generateSpectrograms(audioDir, spectrogramDir, spectrogramDimensions)
     for i = 1:numClasses
         className = subDirs(i).name;
         currentAudioPath = fullfile(audioDir, className);
-        currentSpectrogramPath = fullfile(spectrogramDir, className); % Preserve the subfolder structure
+        currentSpectrogramPath = fullfile(spectrogramDir, className); 
         
         if ~exist(currentSpectrogramPath, 'dir')
             mkdir(currentSpectrogramPath);

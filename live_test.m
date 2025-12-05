@@ -1,6 +1,5 @@
-% live_digit_recognition.m
-% Digit recognition using the trained CNN model and microphone input
-% --- 1. Load Model and Parameters ---
+
+%% 1. Load Model and Parameters ---
 modelName = 'digit_09_model_v4_vcka.mat';
 
 if ~exist(modelName, 'file')
@@ -9,10 +8,10 @@ end
 load(modelName, 'net', 'imageSize'); 
 disp(['Trained model "', modelName, '" loaded successfully.']);
 
-% --- 2. Fixed Spectrogram Parameters (Consistent with generateSpectrograms.m) ---
+%% 2. Fixed Spectrogram Parameters 
 % CRITICAL FOR LIVE TEST: These parameters must be identical to the steps used for training data creation.
-Fs = 16000; % Sample rate for live recording (Must match training data Fs. 16000 Hz is commonly used.)
-recordDuration = 1; % Recording duration for each spoken digit (seconds)
+Fs = 16000; 
+recordDuration = 1; 
 spectrogramDimensions = [64, 64]; 
 numMelBands = spectrogramDimensions(1);
 targetTimeLength = spectrogramDimensions(2);
@@ -25,7 +24,7 @@ audioDir_LiveTest = 'live_recordings/';
 spectrogramDir_LiveTest = 'live_spectrograms/';
 if ~exist(audioDir_LiveTest, 'dir'), mkdir(audioDir_LiveTest); end
 if ~exist(spectrogramDir_LiveTest, 'dir'), mkdir(spectrogramDir_LiveTest); end
-kayitSayaci = 0; % Benzersiz dosya adı oluşturmak için sayaç
+recordCounter = 0;
 % ----------------------------------------
 
 % Initialize the Audio Recorder
@@ -34,8 +33,6 @@ recObj = audiorecorder(Fs, 16, 1); % 16-bit, mono channel
 disp('--------------------------------------------------');
 disp('LIVE DIGIT RECOGNITION STARTED');
 disp(['Recording Duration: ', num2str(recordDuration), ' seconds']);
-disp(['Sample Rate (Fs): ', num2str(Fs), ' Hz']);
-disp(['Kayıtlar buraya kaydedilecek: ', audioDir_LiveTest, ' ve ', spectrogramDir_LiveTest]);
 disp('--------------------------------------------------');
 disp('Ready. Press ENTER to speak a digit, type "q" and press ENTER to quit.');
 
@@ -45,8 +42,8 @@ while true
         break;
     end
     
-    kayitSayaci = kayitSayaci + 1;
-    baseFileName = ['test_', num2str(kayitSayaci, '%03d')];
+    recordCounter = recordCounter + 1;
+    baseFileName = ['test_', num2str(recordCounter, '%03d')];
     
     disp('🎙️ Recording... Speak now.');
     recordblocking(recObj, recordDuration); % Start and wait for recording
@@ -54,19 +51,17 @@ while true
     
     y = getaudiodata(recObj); % Get audio data
 
-    % --- YENİ KOD: Sinyal Gücünü Normalleştirme ---
+    % Normalize signal power
     max_amplitude = max(abs(y));
-    if max_amplitude > 0.01 % Çok sessiz değilse
-        % Maksimum genliği 1'e normalleştirerek sesi yükselt.
+    if max_amplitude > 0.01 
         y = y / max_amplitude; 
     end
     
-    % --- Ses Dosyasını Kaydetme (YENİ) ---
+    % Save audio file
     fullAudioPath = fullfile(audioDir_LiveTest, [baseFileName, '.wav']);
     audiowrite(fullAudioPath, y, Fs);
-    % --------------------------------------
     
-    % --- 3. Audio Pre-processing and Spectrogram Creation ---
+    %% 3. Audio Pre-processing and Spectrogram Creation 
     
     % Spectrogram (MelSpectrogram)
     [S, ~, ~] = melSpectrogram(y, Fs, ...
@@ -87,23 +82,21 @@ while true
     S_normalized = S_normalized / max(S_normalized(:));
     imgData_double = 1 - S_normalized; % Invert colors, resulting in double (0-1) type
     
-    % --- Spektrogram Dosyasını Kaydetme (YENİ) ---
+    % Save spectogram file
     fullSpectrogramPath = fullfile(spectrogramDir_LiveTest, [baseFileName, '.png']);
-    imgData_uint8_to_save = uint8(imgData_double * 255); % PNG'ye kaydederken uint8 kullanmalıyız
+    imgData_uint8_to_save = uint8(imgData_double * 255); 
     imwrite(imgData_uint8_to_save, gray(256), fullSpectrogramPath, 'png'); 
-    % ----------------------------------------------
     
-    % Prepare for CNN Input (CNN DOUBLE beklediği için tekrar double tipini kullanıyoruz)
     imgForCNN = reshape(imgData_double, [spectrogramDimensions, 1]); 
     
-    % --- 4. Classification and Display Result ---
+    %% 4. Classification and Display Result 
     YPred = classify(net, imgForCNN);
     
     predictedDigit = char(YPred);
     
     disp('✨ Predicted Digit:');
     disp(['🎉 ', predictedDigit]);
-    disp(['[Dosya Adı: ', baseFileName, '.wav / .png]']);
+    disp(['[File Name: ', baseFileName, '.wav / .png]']);
     disp('--------------------------------------------------');
     disp('Press ENTER for a new recording, type "q" and press ENTER to quit.');
 end

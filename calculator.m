@@ -1,9 +1,9 @@
-%% Speech Recognition Calculator 
+%% Speech Recognition Calculator (Main Program)
 clear; clc;
 
-% --- 1. Load Model and Settings ---
+%% 1. Load Model and Settings ---
 try
-    % Load your trained model (Assumes 15 classes: 0-9 digits and +, -, *, /, = operators)
+    % Load your trained model 
     load('digit_09_model_v4_vcka.mat', 'net');
     disp('Model main_model.mat loaded successfully.');
 catch
@@ -31,27 +31,27 @@ disp('   Speak Digits (0-9) and Operators (+, -, *, /, =).');
 disp('   Say "equals" to finish the calculation.');
 disp('====================================================');
 
-% --- 2. Main Processing Loop ---
+%% 2. Main Processing Loop 
 while true
     if strcmpi(input_str, 'q')
         break;
     end
     fprintf('\nCurrent Expression: %s', strjoin(expressionBuffer, ' '));
-    input('\nPress ENTER and prepare to speak...', 's');
+    input('\nPress ENTER and prepare to speak, type "q" and press ENTER to quit...', 's');
 
     % Record Audio
-    disp('!!!! RECORDING STARTED: Speak now...');
+    disp('️🎙RECORDING STARTED: Speak now...');
     recordblocking(recObj, duration);
-    disp(' RECORDING FINISHED.');
+    disp('🛑 RECORDING FINISHED.');
     y = getaudiodata(recObj);
 
-       %Normalize signal power
+     %Normalize signal power
     max_amplitude = max(abs(y));
     if max_amplitude > 0.01 
         y = y / max_amplitude; 
     end
    
-    % --- 3. Audio Pre-processing and Spectrogram Creation ---
+    %% 3. Audio Pre-processing and Spectrogram Creation 
     % Spectrogram (MelSpectrogram)
     [S, ~, ~] = melSpectrogram(y, Fs, ...
         'Window', hamming(winSize, 'periodic'), ...
@@ -70,19 +70,19 @@ while true
     S_normalized = S_resized - min(S_resized(:));
     S_normalized = S_normalized / max(S_normalized(:));
     imgData_double = 1 - S_normalized; % Invert colors, resulting in double (0-1) type
-     imgForCNN = reshape(imgData_double, [spectrogramDimensions, 1]); 
- 
+    imgForCNN = reshape(imgData_double, [spectrogramDimensions, 1]); 
 
     % Predict
     YPred = classify(net, imgForCNN);
     predictedLabel = string(YPred);
     disp(predictedLabel);
+
     % Map the predicted word label to its mathematical symbol
     symbol = mapPredictionToSymbol(predictedLabel);
 
     fprintf('\n-> PREDICTION RESULT: %s (Symbol: %s)\n', predictedLabel, symbol);
     
-    % --- 3. Correction Mechanism (Press R to redo) ---
+    %% 3. Correction Mechanism (Press R to redo) 
     while true
         action = input('Press ENTER if prediction is correct, or (R) to record again: ', 's');
         
@@ -90,6 +90,7 @@ while true
             expressionBuffer{end+1} = symbol;
             predictionHistory{end+1} = predictedLabel;
             break; 
+
         elseif strcmpi(action, 'R') % User pressed R, wants to re-record
             if ~isempty(expressionBuffer)
                 % Remove the last accepted symbol from the buffer (undo)
@@ -106,7 +107,7 @@ while true
         end
     end
     
-    % --- 4. Calculation and Exit Control ---
+    %% 4. Calculation and Exit Control 
     if strcmp(symbol, '=')
         fprintf('\n====================================');
         fprintf('\nCALCULATION TERMINATING...');

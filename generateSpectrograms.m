@@ -1,11 +1,5 @@
 function generateSpectrograms(audioDir, spectrogramDir, spectrogramDimensions)
 % generateSpectrograms: Converts audio files into Mel-spectrogram images
-% and preserves the directory structure.
-%
-% audioDir: The main directory containing audio files (e.g., 'recordings/').
-% spectrogramDir: The main directory where spectrograms will be saved (e.g., 'spectrograms/').
-% spectrogramDimensions: The dimensions of the spectrogram image [Height, Width]. Defaults to [64, 64].
-
     if nargin < 3
         spectrogramDimensions = [64, 64]; % [Height, Width]
     end
@@ -25,7 +19,7 @@ function generateSpectrograms(audioDir, spectrogramDir, spectrogramDimensions)
     for i = 1:numClasses
         className = subDirs(i).name;
         currentAudioPath = fullfile(audioDir, className);
-        currentSpectrogramPath = fullfile(spectrogramDir, className); % Preserve the subfolder structure
+        currentSpectrogramPath = fullfile(spectrogramDir, className); 
         
         if ~exist(currentSpectrogramPath, 'dir')
             mkdir(currentSpectrogramPath);
@@ -41,18 +35,18 @@ function generateSpectrograms(audioDir, spectrogramDir, spectrogramDimensions)
             baseFileName = theFiles(k).name;
             fullAudioPath = fullfile(currentAudioPath, baseFileName);
             
-           % Read the audio file
+           %% Read the audio file
             [y, Fs] = audioread(fullAudioPath);
             
-           % Convert to single channel (if stereo)
+           %% Convert to single channel (if stereo)
             if size(y, 2) > 1
                 y = mean(y, 2);
             end
             
-            %%--- Mel-Spectrogram Generation (Consistent Parameters) -----
+            %% Mel-Spectrogram Generation 
             winSize = round(0.025 * Fs); % 25 ms window size
             hopSize = round(0.010 * Fs); % 10 ms hop size (15 ms overlap)
-            nfft = 512;% FFT length
+            nfft = 512; % FFT length
             numMelBands = spectrogramDimensions(1);
             
             [S, F, T] = melSpectrogram(y, Fs, ...

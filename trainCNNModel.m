@@ -11,7 +11,7 @@ numClasses = numel(categories(imds.Labels));
 
 % Split the Data Set
 rng(42); % For reproducibility ?
-[imdsTrain, imdsTest] = splitEachLabel(imds, 0.8, 'randomize'); % 90% train set 10% test set
+[imdsTrain, imdsTest] = splitEachLabel(imds, 0.8, 'randomize'); % 80  train set 20% test set
 
 % Set ReadFcn for normalization (to the 0-1 range using im2double)
 imdsTrain.ReadFcn = @(filename) im2double(imread(filename));
@@ -32,7 +32,7 @@ augimdsTrain = augmentedImageDatastore(imageSize, imdsTrain, ...
     'DataAugmentation', imageAugmenter); 
 
 
-%% 2. CNN Model (GÜNCELLENMİŞ VERSİYON)
+%% 2. CNN Model 
 imageSize = [64 64 1];
 layers = [
     imageInputLayer(imageSize, 'Name', 'input')
@@ -55,15 +55,15 @@ layers = [
     reluLayer('Name', 'relu3')
     maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool3') % 8x8
     
-    dropoutLayer(0.4, 'Name', 'dropout_conv') % Dropout oranını artırdık
+    dropoutLayer(0.4, 'Name', 'dropout_conv') 
     
-    % Fully Connected Layers (Basitleştirilmiş)
+    % Fully Connected Layers
     fullyConnectedLayer(128, 'Name', 'fc1') 
     batchNormalizationLayer('Name', 'bn4')
     reluLayer('Name', 'relu4')
-    dropoutLayer(0.5, 'Name', 'dropout_fc') % Ezberlemeyi önlemek için daha agresif dropout
+    dropoutLayer(0.5, 'Name', 'dropout_fc') % more aggressive dropout to prevent overfitting
     
-    % Çıkış Katmanı
+    % Output Layer
     fullyConnectedLayer(10, 'Name', 'fcOut') 
     softmaxLayer('Name', 'softmax')
     classificationLayer('Name', 'output')
@@ -80,7 +80,7 @@ options = trainingOptions('adam', ...
     'Shuffle', 'every-epoch', ...
     'Plots', 'training-progress', ...
     'Verbose', false, ...
-    'ValidationPatience', 40); % Aşırı öğrenmeyi önlemek için Early Stopping eklendi
+    'ValidationPatience', 40); % Early Stopping to prevent overfitting
 
 fprintf('Model is training (Epochs: 100, Batch Size:32, ValidationPatience: 30)...\n');
 net = trainNetwork(augimdsTrain, layers, options);
