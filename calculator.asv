@@ -1,0 +1,129 @@
+%% Speech Recognition Calculator (Terminal Version)
+clear; clc;
+
+% --- 1. Load Model and Settings ---
+try
+    % Load your trained model (Assumes 15 classes: 0-9 digits and +, -, *, /, = operators)
+    load('digit_09_model_v4_vcka.mat', 'net');
+    disp('Model main_model.mat loaded successfully.');
+catch
+    error('ERROR: main_model.mat file not found or could not be loaded. Please check the path.');
+end
+
+% Recording Settings (Must be identical to Training Settings)
+Fs = 16000;
+duration = 1.0;
+recObj = audiorecorder(Fs, 16, 1);
+spectrogramDimensions = [64, 64]; 
+numMelBands = spectrogramDimensions(1);
+targetTimeLength = spectrogramDimensions(2);
+winSize = round(0.025 * Fs); 
+hopSize = round(0.010 * Fs); 
+nfft = 512;
+
+% Global Variables
+expressionBuffer = {};   % Cell array to store the predicted mathematical symbols (e.g., '5', '+')
+predictionHistory = {};  % Not strictly used for math, but kept for historical tracking
+
+disp('====================================================');
+disp('   SPEECH RECOGNITION CALCULATOR (TERMINAL)');
+disp('   Speak Digits (0-9) and Operators (+, -, *, /, =).');
+disp('   Say "equals" to finish the calculation.');
+disp('====================================================');
+
+% --- 2. Main Processing Loop ---
+while true
+    fprintf('\nCurrent Expression: %s', strjoin(expressionBuffer, ' '));
+    input('\nPress ENTER and prepare to speak...', 's');
+
+    % Record Audio
+    disp('!!!! RECORDING STARTED: Speak now...');
+    recordblocking(recObj, duration);
+    disp(' RECORDING FINISHED.');
+    audioData = getaudiodata(recObj);
+
+    % Preprocessing (Uses your custom preprocessAudio function)
+    audioData = preprocessAudio(audioData, Fs);
+
+    % Generate Mel Spectrogram (Must be EXACTLY the same as training)
+    melSpec = melSpectrogram(audioData, Fs, ...
+        "Window", hamming(512, "periodic"), ...
+        "OverlapLength", 256, ...
+        "FFTLength", 512, ...
+        "NumBands", 64, ...
+        "ApplyLog", true);
+
+    % Capture and Preprocess Image
+    fig = figure('Visible','off');
+    imagesc(melSpec);
+    axis off;
+    colormap jet;
+    frame = getframe(gca);
+    img = frame.cdata;
+    close(fig);
+
+    % Prepare for CNN Input (Must match 64x64 and im2double from training)
+    img = imresize(rgb2gray(img), [64 64]);
+    img = im2double(img); % Normalization
+    img = reshape(img, [64 64 1]);
+
+    % Predict
+    YPred = classify(net, img);
+    predictedLabel = string(YPred);
+    disp(predictedLabel);
+    % Map the predicted word label to its mathematical symbol
+    symbol = mapPredictionToSymbol(predictedLabel);
+
+    fprintf('\n-> PREDICTION RESULT: %s (Symbol: %s)\n', predictedLabel, symbol);
+    
+    % --- 3. Correction Mechanism (Press R to redo) ---
+    while true
+        action = input('Press ENTER if prediction is correct, or (R) to record again: ', 's');
+        
+        if isempty(action) % User pressed ENTER, prediction is accepted
+            expressionBuffer{end+1} = symbol;
+            predictionHistory{end+1} = predictedLabel;
+            break; 
+        elseif strcmpi(action, 'R') % User pressed R, wants to re-record
+            if ~isempty(expressionBuffer)
+                % Remove the last accepted symbol from the buffer (undo)
+                expressionBuffer(end) = []; 
+                predictionHistory(end) = [];
+                fprintf('<- LAST ENTRY CANCELLED. Current Expression: %s\n', strjoin(expressionBuffer, ' '));
+            else
+                disp('Expression is empty. No entry to undo.');
+            end
+            % Break out of the correction loop to return to the main recording loop
+            break; 
+        else
+            disp('Invalid input. Please press ENTER or R.');
+        end
+    end
+    
+    % --- 4. Calculation and Exit Control ---
+    if strcmp(symbol, '=')
+        fprintf('\n====================================');
+        fprintf('\nCALCULATION TERMINATING...');
+        
+        % Remove the trailing '=' sign from the buffer
+        if strcmp(expressionBuffer{end}, '=')
+            expressionBuffer(end) = []; 
+        end
+        
+        % Join the expression elements and evaluate
+        finalExpression = strjoin(expressionBuffer, '');
+        
+        try
+            % Use MATLAB's 'eval' function to solve the mathematical expression
+            result = eval(finalExpression);
+            fprintf('\nOPERATION: %s\n', finalExpression);
+            fprintf('RESULT: %g\n', result);
+        catch
+            fprintf('\nERROR: An invalid mathematical expression occurred. Expression: %s\n', finalExpression);
+            disp('Example Errors: "5 + +" or "3 4"');
+        end
+        
+        disp('====================================');
+        break; % Exit the main loop
+    end
+end

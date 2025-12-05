@@ -1,0 +1,100 @@
+%% 1. Load and Prepare the Data Set ---
+
+spectrogramDir = 'canan_spec01245/';
+imageSize = [64, 64, 1]; 
+
+% Load images using ImageDatastore.
+imds = imageDatastore(spectrogramDir, ...
+    'IncludeSubfolders', true, ...
+    'LabelSource', 'foldernames'); 
+numClasses = numel(categories(imds.Labels));
+
+% Split the Data Set
+rng(42); % For reproducibility ?
+[imdsTrain, imdsTest] = splitEachLabel(imds, 0.9, 'randomize'); % 90% train set 10% test set
+
+% Set ReadFcn for normalization (to the 0-1 range using im2double)
+imdsTrain.ReadFcn = @(filename) im2double(imread(filename));
+imdsTest.ReadFcn  = @(filename) im2double(imread(filename));
+
+
+% Data Augmentation
+pixelRange = [-5 5]; 
+scaleRange = [0.9 1.1]; 
+imageAugmenter = imageDataAugmenter( ...
+    'RandXReflection', true, ...
+    'RandXTranslation', pixelRange, ...
+    'RandYTranslation', pixelRange, ...
+    'RandXScale', scaleRange, ...
+    'RandYScale', scaleRange);
+
+augimdsTrain = augmentedImageDatastore(imageSize, imdsTrain, ...
+    'DataAugmentation', imageAugmenter); 
+
+%% 2. CNN Model 
+imageSize = [64 64 1];
+
+layers = [
+    imageInputLayer(imageSize, 'Name', 'input') % Input layer (64x64x1 grayscale image)
+
+    % CONV-BN-RELU Block 1:
+    convolution2dLayer([2 2], 32, 'Name', 'conv1') 
+    batchNormalizationLayer('Name', 'bn1')
+    reluLayer('Name', 'relu1')
+
+    % CONV-BN-RELU Blok 2: 
+    convolution2dLayer([2 2], 48, 'Name', 'conv2')
+    batchNormalizationLayer('Name', 'bn2')
+    reluLayer('Name', 'relu2')
+
+    % CONV-BN-RELU Blok 3: 
+    convolution2dLayer([2 2], 120, 'Name', 'conv3')
+    batchNormalizationLayer('Name', 'bn3')
+    reluLayer('Name', 'relu3')
+
+    % Max Pooling and Dropout
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool')
+    dropoutLayer(0.25, 'Name', 'dropout1')
+
+    % Fully Connected Layers
+    fullyConnectedLayer(128, 'Name', 'fc1') 
+    batchNormalizationLayer('Name', 'bn4')
+    reluLayer('Name', 'relu4')
+    dropoutLayer(0.25, 'Name', 'dropout2')
+
+    fullyConnectedLayer(64, 'Name', 'fc2')
+    batchNormalizationLayer('Name', 'bn5')
+    reluLayer('Name', 'relu5')
+    dropoutLayer(0.4, 'Name', 'dropout3')
+
+    fullyConnectedLayer(10, 'Name', 'fcOut') % Output layer for 10 classes ( 0-9)
+    softmaxLayer('Name', 'softmax')
+    classificationLayer('Name', 'output')
+];
+
+%% 3. Set Training Parameters and Train
+
+% Used 'adam' optimization
+options = trainingOptions('adam', ... 
+    'InitialLearnRate', 0.001, ...       
+    'MaxEpochs', 50, ...               
+    'MiniBatchSize', 32, ...            
+    'ValidationData', imdsTest, ...     
+    'ValidationFrequency', 30, ...      
+    'Shuffle', 'every-epoch', ...
+    'Plots', 'training-progress', ...
+    'Verbose', false, ...
+    'ValidationPatience', 10); % Aşırı öğrenmeyi önlemek için Early Stopping eklendi
+
+fprintf('Model is training (Epochs: 50, Batch Size: 40)...\n');
+net = trainNetwork(augimdsTrain, layers, options);
+fprintf('Training completed.\n');
+
+%% 4. Evaluate the Model 
+save('digit_01245_model.mat', 'net', 'imageSize'); 
+fprintf('Model saved as "digit_cnn_model.mat" .\n');
+
+% Calculate accuracy on the test data
+YPred = classify(net, imdsTest);
+accuracy = sum(YPred == imdsTest.Labels) / numel(imdsTest.Labels);
+fprintf('Test Accuracy: %.4f\n', accuracy);
