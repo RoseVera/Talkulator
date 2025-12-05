@@ -1,0 +1,48 @@
+function symbol = mapPredictionToSymbol(predictedLabel)
+    
+    % Add all your 15 trained labels here (Digits 0-9 and Operators)
+    
+    if ~isstring(predictedLabel)
+        predictedLabel = string(predictedLabel);
+    end
+    
+    switch lower(predictedLabel)
+        % Digits (Assuming your model predicts the word label)
+        case {'0'}
+            symbol = '0';
+        case {'1'}
+            symbol = '1';
+        case {'2'}
+            symbol = '2';
+        case {'3'}
+            symbol = '3';
+        case {'4'}
+            symbol = '4';
+        case {'5'}
+            symbol = '5';
+        case {'6'}
+            symbol = '6';
+        case {'7'}
+            symbol = '7';
+        case {'8'}
+            symbol = '8';
+        case {'9'}
+            
+        % Operators
+        case {'plus'}
+            symbol = '+';
+        case {'minus'}
+            symbol = '-';
+        case {'times'}
+            symbol = '*';
+        case {'divided'}
+            symbol = '/';
+        case {'equals'}
+            symbol = '=';
+            
+        % Default/Unknown
+        otherwise
+            % If the prediction is not explicitly mapped, use the predicted label itself
+            symbol = char(predictedLabel);
+    end
+end
