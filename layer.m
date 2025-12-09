@@ -38,3 +38,106 @@ layers = [
     softmaxLayer('Name', 'softmax')
     classificationLayer('Name', 'output')
 ];
+
+%%for 360 sample digit dataset
+imageSize = [64 64 1];
+layers = [
+    imageInputLayer(imageSize, 'Name', 'input')
+
+    % CONV-BN-RELU-POOL Block 1: (64x64 -> 32x32)
+    convolution2dLayer([3 3], 32, 'Padding', 'same', 'Name', 'conv1') 
+    batchNormalizationLayer('Name', 'bn1')
+    reluLayer('Name', 'relu1')
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool1') 
+
+    % CONV-BN-RELU-POOL Block 2: (32x32 -> 16x16)
+    convolution2dLayer([3 3], 64, 'Padding', 'same', 'Name', 'conv2') 
+    batchNormalizationLayer('Name', 'bn2')
+    reluLayer('Name', 'relu2')
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool2') 
+    
+    % CONV-BN-RELU Block 3: (16x16 -> 8x8)
+    convolution2dLayer([3 3], 128, 'Padding', 'same', 'Name', 'conv3') 
+    batchNormalizationLayer('Name', 'bn3')
+    reluLayer('Name', 'relu3')
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool3') % 8x8
+    
+    dropoutLayer(0.3, 'Name', 'dropout_conv') 
+    
+    % Fully Connected Layers
+    fullyConnectedLayer(128, 'Name', 'fc1') 
+    batchNormalizationLayer('Name', 'bn4')
+    reluLayer('Name', 'relu4')
+    dropoutLayer(0.4, 'Name', 'dropout_fc') % more aggressive dropout to prevent overfitting
+    
+    % Output Layer
+    fullyConnectedLayer(10, 'Name', 'fcOut') 
+    softmaxLayer('Name', 'softmax')
+    classificationLayer('Name', 'output')
+];
+%% 3. Set Training Parameters and Train
+
+% Used 'adam' optimization
+options = trainingOptions('adam', ... 
+    'InitialLearnRate', 0.001, ...       
+    'MaxEpochs', 100, ...               
+    'MiniBatchSize', 64, ...            
+    'ValidationData', imdsTest, ...     
+    'ValidationFrequency', 30, ...      
+    'Shuffle', 'every-epoch', ...
+    'Plots', 'training-progress', ...
+    'Verbose', false, ...
+    'ValidationPatience', 20); % Early Stopping to prevent overfitting
+
+
+
+%%for operators 5 class
+imageSize = [64 64 1];
+layers = [
+    imageInputLayer(imageSize, 'Name', 'input')
+
+    % CONV-BN-RELU-POOL Block 1: (64x64 -> 32x32)
+    convolution2dLayer([3 3], 32, 'Padding', 'same', 'Name', 'conv1') 
+    batchNormalizationLayer('Name', 'bn1')
+    reluLayer('Name', 'relu1')
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool1') 
+
+    % CONV-BN-RELU-POOL Block 2: (32x32 -> 16x16)
+    convolution2dLayer([3 3], 64, 'Padding', 'same', 'Name', 'conv2') 
+    batchNormalizationLayer('Name', 'bn2')
+    reluLayer('Name', 'relu2')
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool2') 
+    
+    % CONV-BN-RELU Block 3: (16x16 -> 8x8)
+    convolution2dLayer([3 3], 128, 'Padding', 'same', 'Name', 'conv3') 
+    batchNormalizationLayer('Name', 'bn3')
+    reluLayer('Name', 'relu3')
+    maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool3') % 8x8
+    
+    dropoutLayer(0.4, 'Name', 'dropout_conv') 
+    
+    % Fully Connected Layers
+    fullyConnectedLayer(128, 'Name', 'fc1') 
+    batchNormalizationLayer('Name', 'bn4')
+    reluLayer('Name', 'relu4')
+    dropoutLayer(0.5, 'Name', 'dropout_fc') % more aggressive dropout to prevent overfitting
+    
+    % Output Layer
+    fullyConnectedLayer(10, 'Name', 'fcOut') 
+    softmaxLayer('Name', 'softmax')
+    classificationLayer('Name', 'output')
+];
+%% 3. Set Training Parameters and Train
+
+% Used 'adam' optimization
+options = trainingOptions('adam', ... 
+    'InitialLearnRate', 0.001, ...       
+    'MaxEpochs', 100, ...               
+    'MiniBatchSize', 32, ...            
+    'ValidationData', imdsTest, ...     
+    'ValidationFrequency', 30, ...      
+    'Shuffle', 'every-epoch', ...
+    'Plots', 'training-progress', ...
+    'Verbose', false, ...
+    'ValidationPatience', 20); % Early Stopping to prevent overfitting
+

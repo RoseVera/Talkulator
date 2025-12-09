@@ -1,6 +1,6 @@
 function symbol = mapPredictionToSymbol(predictedLabel)
     
-    % Add all your 15 trained labels here (Digits 0-9 and Operators)
+    % maps all digits and operators + - * / = 
     
     if ~isstring(predictedLabel)
         predictedLabel = string(predictedLabel);
@@ -27,6 +27,7 @@ function symbol = mapPredictionToSymbol(predictedLabel)
         case {'8'}
             symbol = '8';
         case {'9'}
+            symbol = '9';
             
         % Operators
         case {'plus'}

@@ -4,7 +4,7 @@ clear; clc;
 %% 1. Load Model and Settings ---
 try
     % Load your trained model 
-    load('digit_09_model_v4_vcka.mat', 'net');
+    load('op_dig_89_62.mat', 'net');
     disp('Model main_model.mat loaded successfully.');
 catch
     error('ERROR: main_model.mat file not found or could not be loaded. Please check the path.');
@@ -33,9 +33,7 @@ disp('====================================================');
 
 %% 2. Main Processing Loop 
 while true
-    if strcmpi(input_str, 'q')
-        break;
-    end
+    
     fprintf('\nCurrent Expression: %s', strjoin(expressionBuffer, ' '));
     input('\nPress ENTER and prepare to speak, type "q" and press ENTER to quit...', 's');
 
@@ -85,7 +83,9 @@ while true
     %% 3. Correction Mechanism (Press R to redo) 
     while true
         action = input('Press ENTER if prediction is correct, or (R) to record again: ', 's');
-        
+        if strcmpi(action, 'q')
+        break;
+        end
         if isempty(action) % User pressed ENTER, prediction is accepted
             expressionBuffer{end+1} = symbol;
             predictionHistory{end+1} = predictedLabel;
