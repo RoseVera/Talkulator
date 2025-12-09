@@ -1,4 +1,8 @@
 all_spectograms/
 audio_datasets/
 live_recordings/
-live_spectograms
+live_spectograms/
+train_results/
+models/
+op_dig_spec/
+

@@ -1,6 +1,6 @@
 %% 1. Load and Prepare the Data Set ---
 
-spectrogramDir = 'vera_canan_kaggle_astjan_spec/';
+spectrogramDir = 'op_dig_spec/';
 imageSize = [64, 64, 1]; 
 
 % Load images using ImageDatastore.
@@ -55,16 +55,16 @@ layers = [
     reluLayer('Name', 'relu3')
     maxPooling2dLayer([2 2], 'Stride', [2 2], 'Name', 'maxpool3') % 8x8
     
-    dropoutLayer(0.4, 'Name', 'dropout_conv') 
+  dropoutLayer(0.3, 'Name', 'dropout_conv') 
     
     % Fully Connected Layers
     fullyConnectedLayer(128, 'Name', 'fc1') 
     batchNormalizationLayer('Name', 'bn4')
     reluLayer('Name', 'relu4')
-    dropoutLayer(0.5, 'Name', 'dropout_fc') % more aggressive dropout to prevent overfitting
+    dropoutLayer(0.4, 'Name', 'dropout_fc') % more aggressive dropout to prevent overfitting
     
     % Output Layer
-    fullyConnectedLayer(10, 'Name', 'fcOut') 
+    fullyConnectedLayer(15, 'Name', 'fcOut') 
     softmaxLayer('Name', 'softmax')
     classificationLayer('Name', 'output')
 ];
@@ -74,21 +74,21 @@ layers = [
 options = trainingOptions('adam', ... 
     'InitialLearnRate', 0.001, ...       
     'MaxEpochs', 100, ...               
-    'MiniBatchSize', 32, ...            
+    'MiniBatchSize', 64, ...            
     'ValidationData', imdsTest, ...     
     'ValidationFrequency', 30, ...      
     'Shuffle', 'every-epoch', ...
     'Plots', 'training-progress', ...
     'Verbose', false, ...
-    'ValidationPatience', 40); % Early Stopping to prevent overfitting
+    'ValidationPatience', 25); % Early Stopping to prevent overfitting
 
-fprintf('Model is training (Epochs: 100, Batch Size:32, ValidationPatience: 30)...\n');
+fprintf('Model is training (Epochs: 100, Batch Size:64, ValidationPatience: 25)...\n');
 net = trainNetwork(augimdsTrain, layers, options);
 fprintf('Training completed.\n');
 
 %% 4. Evaluate the Model 
-save('digit_09_model_v4_vcka.mat', 'net', 'imageSize'); 
-fprintf('Model saved as "digit_09_model_v4_vcka.mat" .\n');
+save('op_dig.mat', 'net', 'imageSize'); 
+fprintf('Model saved as "op_dig.mat" .\n');
 
 % Calculate accuracy on the test data
 YPred = classify(net, imdsTest);

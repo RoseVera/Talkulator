@@ -3,7 +3,7 @@ function create_dataset()
     Fs = 16000; % Sample Rate (Consistent with Training/Live Test)
     recordDuration = 1.0; % Recording Duration (Seconds)
     
-    audioDir = 'vera_dataset/'; % Root directory for recordings
+    audioDir = 'operator_vera/'; % Root directory for recordings
     
     % Prepare the Audio Recorder
     recObj = audiorecorder(Fs, 16, 1); % 16-bit, mono channel

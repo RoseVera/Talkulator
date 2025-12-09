@@ -1,6 +1,6 @@
 
 %% 1. Load Model and Parameters ---
-modelName = 'digit_09_model_v4_vcka.mat';
+modelName = 'op_dig_89_62.mat';
 
 if ~exist(modelName, 'file')
     error(['Trained model file not found: ', modelName, '. Please run trainCNNModel.m first.']);
